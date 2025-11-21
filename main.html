@@ -3,8 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Vibe UI + Firebase</title>
-  <!-- Tailwind CDN (JIT) -->
+  <title>Vibe UI + Weather + Map</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -25,29 +24,28 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-  <!-- Leaflet CSS -->
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-  crossorigin=""
-/>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
 
-<style>
-  #map {
-    height: 420px;
-    border-radius: 20px;
-    overflow: hidden;
-  }
-</style>
+  <style>
+    #map {
+      height: 420px;
+      border-radius: 20px;
+      overflow: hidden;
+      z-index: 0; /* Fix lỗi đè lên các thành phần khác */
+    }
+  </style>
 
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-900">
   <div class="max-w-4xl mx-auto p-6">
-    <!-- Header -->
     <header class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="h-10 w-10 rounded-2xl bg-brand-600 shadow-lg"></div>
+        <div class="h-10 w-10 rounded-2xl bg-brand-600 shadow-lg flex items-center justify-center text-white font-bold">V</div>
         <h1 class="text-2xl font-bold tracking-tight">Vibe UI</h1>
       </div>
       <div id="authArea" class="flex items-center gap-3">
@@ -62,71 +60,72 @@
       </div>
     </header>
 
-    <!-- Hero -->
     <section class="mt-8">
       <div class="rounded-3xl p-6 md:p-10 bg-white border border-slate-200 shadow-xl">
-        <h2 class="text-xl md:text-2xl font-bold">Tạo giao diện nhanh • Đẹp • Có dữ liệu</h2>
-        <p class="mt-2 text-slate-600">Mẫu tối giản để bắt đầu: Tailwind + Firebase Auth + Firestore.</p>
-
-        <div class="mt-6 grid md:grid-cols-3 gap-4">
-          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p class="font-semibold">Auth</p>
-            <p class="text-sm text-slate-600">Đăng nhập Google siêu nhanh.</p>
-          </div>
-          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p class="font-semibold">Firestore</p>
-            <p class="text-sm text-slate-600">Lưu & đọc note theo thời gian thực.</p>
-          </div>
-          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p class="font-semibold">UI Vibe</p>
-            <p class="text-sm text-slate-600">Thẻ, bóng đổ, góc bo 2xl, gradient.</p>
-          </div>
-        </div>
+        <h2 class="text-xl md:text-2xl font-bold">Du lịch & Thời tiết thông minh</h2>
+        <p class="mt-2 text-slate-600">Tìm địa điểm, xem thời tiết hiện tại và lưu ghi chú hành trình.</p>
       </div>
     </section>
 
-    <!-- Map Search Section -->
-<section class="mt-10">
-  <div class="rounded-3xl p-6 bg-white border border-slate-200 shadow-xl">
-    <h3 class="text-lg font-semibold mb-3">Tìm địa điểm ở Việt Nam</h3>
+    <section class="mt-8">
+      <div class="rounded-3xl p-6 bg-white border border-slate-200 shadow-xl">
+        <h3 class="text-lg font-semibold mb-3">Khám phá địa điểm</h3>
 
-    <div class="flex gap-3">
-      <input
-        id="placeInput"
-        type="text"
-        placeholder="Ví dụ: Hà Nội, Hội An, Vũng Tàu..."
-        class="flex-1 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-100"
-      />
-      <button
-        id="btnSearch"
-        class="px-5 py-3 rounded-xl bg-brand-600 text-white font-semibold shadow hover:bg-brand-700"
-      >
-        Tìm
-      </button>
-    </div>
+        <div class="flex gap-3">
+          <input
+            id="placeInput"
+            type="text"
+            placeholder="Nhập tên thành phố (VD: Da Nang, Ha Noi)..."
+            class="flex-1 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-100"
+          />
+          <button
+            id="btnSearch"
+            class="px-5 py-3 rounded-xl bg-brand-600 text-white font-semibold shadow hover:bg-brand-700"
+          >
+            Tìm
+          </button>
+        </div>
 
-    <p id="statusText" class="text-sm text-slate-500 mt-2"></p>
+        <p id="statusText" class="text-sm text-slate-500 mt-2 min-h-[20px]"></p>
 
-    <div id="map" class="mt-4"></div>
+        <div id="weatherCard" class="hidden mt-4 p-5 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-400 text-white shadow-lg flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <img id="weatherIcon" src="" alt="Weather Icon" class="w-16 h-16 bg-white/20 rounded-full shadow-sm">
+                <div>
+                    <div class="flex items-baseline gap-2">
+                        <h2 id="weatherTemp" class="text-4xl font-bold">--°</h2>
+                        <span id="weatherMain" class="text-lg font-medium">--</span>
+                    </div>
+                    <p id="weatherDesc" class="text-sm opacity-90 capitalize">--</p>
+                    <div class="text-xs opacity-80 mt-1 flex gap-3">
+                        <span id="weatherHumid">💦 --%</span>
+                        <span id="weatherWind">💨 -- m/s</span>
+                    </div>
+                </div>
+            </div>
+            <div class="text-right">
+                <p id="weatherCity" class="text-xl font-bold">--</p>
+                <p class="text-xs opacity-75">Thời tiết hiện tại</p>
+            </div>
+        </div>
+        <div id="map" class="mt-6"></div>
 
-    <h4 class="text-md font-semibold mt-4">5 điểm nổi bật gần đây:</h4>
-    <ul id="poiList" class="mt-2 space-y-2 text-sm text-slate-700"></ul>
-  </div>
-</section>
+        <h4 class="text-md font-semibold mt-4">5 địa điểm lân cận:</h4>
+        <ul id="poiList" class="mt-2 space-y-2 text-sm text-slate-700"></ul>
+      </div>
+    </section>
 
-
-    <!-- App Card -->
     <section class="mt-8">
       <div class="rounded-3xl p-6 bg-white border border-slate-200 shadow-xl">
         <div class="flex items-center justify-between gap-3">
-          <h3 class="text-lg font-semibold">Notes của bạn</h3>
-          <span id="authHint" class="text-sm text-slate-500">Hãy đăng nhập để tạo note.</span>
+          <h3 class="text-lg font-semibold">Ghi chú chuyến đi</h3>
+          <span id="authHint" class="text-sm text-slate-500">Đăng nhập để lưu.</span>
         </div>
 
         <form id="noteForm" class="mt-4 grid md:grid-cols-[1fr_auto] gap-3">
-          <input id="noteInput" type="text" placeholder="Viết gì đó..." class="px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-100" />
+          <input id="noteInput" type="text" placeholder="Note lại địa điểm hay..." class="px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-100" />
           <button class="px-5 py-3 rounded-xl bg-brand-600 text-white font-semibold shadow hover:bg-brand-700 disabled:opacity-50" disabled>
-            Thêm
+            Lưu
           </button>
         </form>
 
@@ -134,35 +133,45 @@
       </div>
     </section>
 
-    <!-- Footer -->
     <footer class="py-10 text-center text-sm text-slate-500">
-      Made with ♥ in Codespaces / Google IDX
+      Created for Lab 05 Assignment
     </footer>
   </div>
 
-  <!-- Firebase SDKs (v10+ modular via CDN) -->
   <script type="module">
-    // 1) Thay cấu hình dưới bằng project của bạn (Firebase console -> Web app)
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    /* -----------------------------------------------------------
+       1. CẤU HÌNH FIREBASE & API KEY
+       ----------------------------------------------------------- */
     const firebaseConfig = {
-  apiKey: "AIzaSyCamUCmlvjUJFm4s4dH6wCJAJqXdh6kIpA",
-  authDomain: "explore-map-df995.firebaseapp.com",
-  projectId: "explore-map-df995",
-  storageBucket: "explore-map-df995.firebasestorage.app",
-  messagingSenderId: "519785561982",
-  appId: "1:519785561982:web:a3984ca81ca51b01f33d2f",
-  measurementId: "G-DLBYFLYFZR"
-};
+      apiKey: "AIzaSyCamUCmlvjUJFm4s4dH6wCJAJqXdh6kIpA",
+      authDomain: "explore-map-df995.firebaseapp.com",
+      projectId: "explore-map-df995",
+      storageBucket: "explore-map-df995.firebasestorage.app",
+      messagingSenderId: "519785561982",
+      appId: "1:519785561982:web:a3984ca81ca51b01f33d2f",
+      measurementId: "G-DLBYFLYFZR"
+    };
 
+    // --- [QUAN TRỌNG] API KEY OPENWEATHERMAP CỦA BẠN ---
+    // Bạn có thể dùng key demo này hoặc thay bằng key của bạn nếu bị lỗi limit
+    const WEATHER_API_KEY = "aff9cfd8832030b4c0294eb06c0e5fc4"; 
+
+    /* -----------------------------------------------------------
+       2. IMPORT LIBRARY
+       ----------------------------------------------------------- */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 
+    // Init Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // UI elements
+    /* -----------------------------------------------------------
+       3. LOGIC XỬ LÝ UI & AUTH
+       ----------------------------------------------------------- */
     const btnSignIn = document.getElementById("btnSignIn");
     const btnSignOut = document.getElementById("btnSignOut");
     const userChip = document.getElementById("userChip");
@@ -172,10 +181,8 @@
     const noteForm = document.getElementById("noteForm");
     const noteInput = document.getElementById("noteInput");
     const noteList = document.getElementById("noteList");
-
     const provider = new GoogleAuthProvider();
 
-    // Auth UI
     btnSignIn.classList.remove("hidden");
     btnSignIn.addEventListener("click", async () => {
       try { await signInWithPopup(auth, provider); } 
@@ -187,188 +194,199 @@
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        // Show user chip
         btnSignIn.classList.add("hidden");
         userChip.classList.remove("hidden");
-        userChip.classList.add("flex");
-        avatar.src = user.photoURL || "https://ui-avatars.com/api/?name="+encodeURIComponent(user.displayName||"U");
-        displayName.textContent = user.displayName || user.email;
-
-        authHint.textContent = "Bạn đã đăng nhập. Viết note để lưu!";
+        avatar.src = user.photoURL || "https://ui-avatars.com/api/?name=User";
+        displayName.textContent = user.displayName || "User";
+        authHint.textContent = "Đã sẵn sàng.";
         noteForm.querySelector("button").disabled = false;
 
-        // Subscribe user's notes
         if (unsubNotes) unsubNotes();
-        const q = query(
-          collection(db, "notes"),
-          where("uid", "==", user.uid),
-          orderBy("createdAt", "desc")
-        );
+        const q = query(collection(db, "notes"), where("uid", "==", user.uid), orderBy("createdAt", "desc"));
         unsubNotes = onSnapshot(q, (snap) => {
           noteList.innerHTML = "";
           snap.forEach((doc) => {
             const li = document.createElement("li");
             const data = doc.data();
             li.className = "flex items-center justify-between px-4 py-3 rounded-xl border bg-slate-50 border-slate-200";
-            li.innerHTML = `
-              <span class="truncate">${data.text}</span>
-              <span class="text-xs text-slate-500">${data.createdAt?.toDate?.().toLocaleString() || "..."}</span>
-            `;
+            li.innerHTML = `<span class="truncate">${data.text}</span><span class="text-xs text-slate-500">${data.createdAt?.toDate?.().toLocaleDateString() || "vừa xong"}</span>`;
             noteList.appendChild(li);
           });
         });
-
       } else {
-        // Signed out
         btnSignIn.classList.remove("hidden");
         userChip.classList.add("hidden");
-        userChip.classList.remove("flex");
-        authHint.textContent = "Hãy đăng nhập để tạo note.";
+        authHint.textContent = "Đăng nhập để lưu note.";
         noteForm.querySelector("button").disabled = true;
         noteList.innerHTML = "";
-        if (unsubNotes) { unsubNotes(); unsubNotes = null; }
       }
     });
 
-    // Add note
     noteForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const user = auth.currentUser;
       const text = (noteInput.value || "").trim();
       if (!user || !text) return;
-      try {
-        await addDoc(collection(db, "notes"), {
-          uid: user.uid,
-          text,
-          createdAt: serverTimestamp()
-        });
-        noteInput.value = "";
-        noteInput.focus();
-      } catch (e) {
-        alert(e.message);
-      }
+      await addDoc(collection(db, "notes"), { uid: user.uid, text, createdAt: serverTimestamp() });
+      noteInput.value = "";
     });
 
-    // ===============================
-//  LEAFLET + OPENSTREETMAP + POI
-// ===============================
+    /* -----------------------------------------------------------
+       4. LOGIC BẢN ĐỒ & THỜI TIẾT (WEATHER API)
+       ----------------------------------------------------------- */
+    const placeInput = document.getElementById("placeInput");
+    const btnSearch = document.getElementById("btnSearch");
+    const statusText = document.getElementById("statusText");
+    const poiList = document.getElementById("poiList");
+    
+    // Weather UI Elements
+    const weatherCard = document.getElementById("weatherCard");
+    const weatherTemp = document.getElementById("weatherTemp");
+    const weatherMain = document.getElementById("weatherMain");
+    const weatherDesc = document.getElementById("weatherDesc");
+    const weatherCity = document.getElementById("weatherCity");
+    const weatherIcon = document.getElementById("weatherIcon");
+    const weatherHumid = document.getElementById("weatherHumid");
+    const weatherWind = document.getElementById("weatherWind");
 
-// Load Leaflet JS
-import "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    // Init Map
+    const map = L.map("map").setView([16.05, 108.2], 6);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+    let markerGroup = L.layerGroup().addTo(map);
 
-// UI
-const placeInput = document.getElementById("placeInput");
-const btnSearch = document.getElementById("btnSearch");
-const statusText = document.getElementById("statusText");
-const poiList = document.getElementById("poiList");
+    function setStatus(msg) { statusText.textContent = msg; }
 
-// Init map centered on Vietnam
-const map = L.map("map").setView([16.05, 108.2], 6);
+    // Hàm gọi API Thời tiết
+    async function getWeather(lat, lon) {
+        try {
+            // Gọi API OpenWeatherMap (đơn vị metric: độ C, lang: vi)
+            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric&lang=vi`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Lỗi lấy thời tiết");
+            
+            const data = await res.json();
+            renderWeather(data);
+        } catch (error) {
+            console.error(error);
+            weatherCard.classList.add("hidden");
+        }
+    }
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-}).addTo(map);
+    // Hàm hiển thị dữ liệu thời tiết lên thẻ
+    function renderWeather(data) {
+        weatherCard.classList.remove("hidden");
+        
+        const temp = Math.round(data.main.temp);
+        const desc = data.weather[0].description;
+        const main = data.weather[0].main;
+        const iconCode = data.weather[0].icon;
+        const humid = data.main.humidity;
+        const wind = data.wind.speed;
+        const cityName = data.name;
 
-let markerGroup = L.layerGroup().addTo(map);
+        weatherTemp.textContent = `${temp}°`;
+        weatherMain.textContent = main; // Mưa/Nắng...
+        weatherDesc.textContent = desc;
+        weatherCity.textContent = cityName;
+        weatherHumid.textContent = `💦 ${humid}%`;
+        weatherWind.textContent = `💨 ${wind} m/s`;
+        
+        // Lấy icon từ OpenWeather
+        weatherIcon.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+    }
 
-// Helper
-function setStatus(msg) {
-  statusText.textContent = msg;
-}
+    // Xử lý tìm kiếm
+    async function searchPlace() {
+      const query = placeInput.value.trim();
+      if (!query) { setStatus("Vui lòng nhập tên địa điểm."); return; }
 
-// SEARCH FUNCTION
-btnSearch.addEventListener("click", searchPlace);
-placeInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") searchPlace();
-});
+      setStatus("Đang tìm kiếm...");
+      weatherCard.classList.add("hidden"); // Ẩn thẻ thời tiết cũ
 
-async function searchPlace() {
-  const query = placeInput.value.trim();
-  if (!query) {
-    setStatus("Hãy nhập địa điểm trước.");
-    return;
-  }
+      // 1. Geocoding (Lấy tọa độ từ tên)
+      const nominatimUrl = "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(query);
+      
+      try {
+          const res = await fetch(nominatimUrl);
+          const data = await res.json();
 
-  setStatus("Đang tìm địa điểm...");
+          if (!data.length) {
+            setStatus("Không tìm thấy địa điểm này.");
+            return;
+          }
 
-  // Step 1: Geocode with Nominatim
-  const nominatimUrl =
-    "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" +
-    encodeURIComponent(query + ", Việt Nam");
+          const { lat, lon, display_name } = data[0];
+          const latNum = parseFloat(lat);
+          const lonNum = parseFloat(lon);
 
-  const res = await fetch(nominatimUrl, {
-    headers: { "User-Agent": "StudentProject/1.0" },
-  });
-  const data = await res.json();
+          // Cập nhật bản đồ
+          map.setView([latNum, lonNum], 13);
+          setStatus("Đã tìm thấy: " + display_name);
 
-  if (!data.length) {
-    setStatus("Không tìm thấy địa điểm.");
-    return;
-  }
+          // 2. Gọi API Thời tiết ngay khi có tọa độ
+          getWeather(latNum, lonNum);
 
-  const { lat, lon, display_name } = data[0];
-  const latNum = parseFloat(lat);
-  const lonNum = parseFloat(lon);
+          // 3. Tìm địa điểm lân cận (Overpass API)
+          fetchPOIs(latNum, lonNum);
 
-  map.setView([latNum, lonNum], 15);
+      } catch (e) {
+          setStatus("Lỗi kết nối. Vui lòng thử lại.");
+          console.error(e);
+      }
+    }
 
-  setStatus("Đã tìm thấy: " + display_name);
+    async function fetchPOIs(lat, lon) {
+        const overpassQuery = `
+            [out:json][timeout:25];
+            (
+              node(around:3000,${lat},${lon})["tourism"];
+              node(around:3000,${lat},${lon})["amenity"="cafe"];
+            );
+            out 5;
+        `;
+        
+        try {
+            const res = await fetch("https://overpass-api.de/api/interpreter", {
+                method: "POST",
+                body: overpassQuery,
+            });
+            const data = await res.json();
+            
+            poiList.innerHTML = "";
+            markerGroup.clearLayers();
 
-  // Step 2: Get nearby POI from Overpass API
-  setStatus("Đang tải danh sách POI...");
+            if (!data.elements?.length) {
+                poiList.innerHTML = "<li class='text-slate-400 italic'>Không có điểm du lịch/cafe gần đây.</li>";
+                return;
+            }
 
-  const overpassQuery = `
-      [out:json][timeout:25];
-      (
-        node(around:2000,${latNum},${lonNum})["tourism"];
-        node(around:2000,${latNum},${lonNum})["amenity"];
-      );
-      out 5;
-  `;
+            data.elements.forEach((el, idx) => {
+                const name = el.tags?.name || "Địa điểm không tên";
+                const type = el.tags?.tourism || el.tags?.amenity || "POI";
+                
+                // Marker trên bản đồ
+                const marker = L.marker([el.lat, el.lon]).addTo(markerGroup)
+                    .bindPopup(`<b>${name}</b><br>${type}`);
+                
+                // List bên dưới
+                const li = document.createElement("li");
+                li.className = "border-b border-slate-100 py-2 cursor-pointer hover:text-brand-600 flex justify-between";
+                li.innerHTML = `<span>${idx+1}. ${name}</span> <span class="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500">${type}</span>`;
+                li.onclick = () => {
+                    map.setView([el.lat, el.lon], 16);
+                    marker.openPopup();
+                };
+                poiList.appendChild(li);
+            });
 
-  const overpassRes = await fetch("https://overpass-api.de/api/interpreter", {
-    method: "POST",
-    body: overpassQuery,
-  });
+        } catch (e) {
+            console.error("Lỗi tải POI", e);
+        }
+    }
 
-  const overpassData = await overpassRes.json();
-
-  poiList.innerHTML = "";
-  markerGroup.clearLayers();
-
-  if (!overpassData.elements?.length) {
-    setStatus("Không tìm thấy POIs xung quanh.");
-    return;
-  }
-
-  setStatus("Đã tìm thấy " + overpassData.elements.length + " POIs.");
-
-  overpassData.elements.slice(0, 5).forEach((el, idx) => {
-    const name = el.tags?.name || `Điểm #${idx + 1}`;
-    const type =
-      el.tags?.tourism ||
-      el.tags?.amenity ||
-      el.tags?.leisure ||
-      "POI";
-
-    const lat = el.lat;
-    const lon = el.lon;
-
-    const marker = L.marker([lat, lon])
-      .addTo(markerGroup)
-      .bindPopup(`<b>${name}</b><br>${type}`);
-
-    const li = document.createElement("li");
-    li.innerHTML = `<b>${idx + 1}.</b> ${name} <span class="text-slate-500">(${type})</span>`;
-    li.className = "border p-2 rounded-xl cursor-pointer hover:bg-slate-100";
-    li.onclick = () => {
-      map.setView([lat, lon], 18);
-      marker.openPopup();
-    };
-
-    poiList.appendChild(li);
-  });
-}
+    // Event Listeners
+    btnSearch.addEventListener("click", searchPlace);
+    placeInput.addEventListener("keydown", (e) => { if (e.key === "Enter") searchPlace(); });
 
   </script>
 </body>
